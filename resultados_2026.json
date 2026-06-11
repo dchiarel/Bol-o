@@ -1,0 +1,14 @@
+{
+  "updatedAt": "2026-06-02T09:00:00Z",
+  "source": "GitHub Actions / API Futebol",
+  "note": "Atualizado automaticamente todos os dias às 9h UTC (6h BRT)",
+  "gameResults": {},
+  "overallResults": {
+    "topScorer": "",
+    "finalist1": "",
+    "finalist2": "",
+    "winner": ""
+  },
+  "knockoutTeams": {},
+  "redCards": {}
+}

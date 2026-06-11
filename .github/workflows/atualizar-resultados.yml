@@ -1,0 +1,43 @@
+name: ⚽ Atualizar Resultados Copa 2026
+
+on:
+  schedule:
+    # Todo dia às 9h UTC = 6h BRT (UTC-3)
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    # Permite rodar manualmente pelo GitHub
+
+jobs:
+  atualizar-resultados:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Instalar dependências
+        run: cd scripts && npm install
+
+      - name: 🔍 Buscar resultados (fontes gratuitas)
+        run: node scripts/buscar-resultados.js
+
+      - name: 💾 Commit se houver mudanças
+        run: |
+          git config user.name "Bolão Bot 🤖"
+          git config user.email "bot@bolao.com"
+          git add resultados_2026.json
+          git diff --cached --quiet || git commit -m "⚽ Resultados $(date -u '+%d/%m/%Y %H:%M') UTC"
+          git push || true
+
+      - name: 🚀 Rebuild no Netlify
+        if: env.NETLIFY_BUILD_HOOK != ''
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: curl -s -X POST "$NETLIFY_BUILD_HOOK" && echo "✅ Netlify notificado"

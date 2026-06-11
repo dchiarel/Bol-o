@@ -1,0 +1,13 @@
+{
+  "name": "bolao-copa-2026-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de automação para o Bolão Copa 2026",
+  "main": "buscar-resultados.js",
+  "scripts": {
+    "buscar": "node buscar-resultados.js",
+    "test": "node test-api.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(wc -l \"C:\\\\Users\\\\Dj\\\\Desktop\\\\Bolão\\\\index.html\" 2>&1; ls \"C:\\\\Users\\\\Dj\\\\Desktop\\\\Bolão\\\\\" | grep -v backup)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)"
+    ]
+  }
+}
