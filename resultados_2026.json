@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-06-02T09:00:00Z",
-  "source": "GitHub Actions / API Futebol",
-  "note": "Atualizado automaticamente todos os dias às 9h UTC (6h BRT)",
+  "updatedAt": "2026-06-11T22:06:44.449Z",
+  "fonte": "nenhuma",
+  "totalJogosComResultado": 0,
   "gameResults": {},
   "overallResults": {
     "topScorer": "",
