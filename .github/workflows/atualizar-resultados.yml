@@ -26,6 +26,8 @@ jobs:
         run: cd scripts && npm install
 
       - name: 🔍 Buscar resultados (fontes gratuitas)
+        env:
+          WORLDCUP26_TOKEN: ${{ secrets.WORLDCUP26_TOKEN }}
         run: node scripts/buscar-resultados.js
 
       - name: 💾 Commit se houver mudanças
