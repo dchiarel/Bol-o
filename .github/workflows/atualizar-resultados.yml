@@ -3,7 +3,7 @@ name: ⚽ Atualizar Resultados Copa 2026
 on:
   schedule:
     # Todo dia às 9h UTC = 6h BRT (UTC-3)
-    - cron: '0 9 * * *'
+    - cron: '0 */4 * * *'
   workflow_dispatch:
     # Permite rodar manualmente pelo GitHub
 
