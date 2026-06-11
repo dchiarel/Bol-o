@@ -1,0 +1,13 @@
+# Claude Code
+.claude/
+
+# Backups locais
+backup_*/
+
+# Imagens locais (não usadas pelo site)
+fundo site.avif
+fundo site.jpg
+
+# Node
+node_modules/
+scripts/node_modules/
