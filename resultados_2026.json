@@ -1,8 +1,20 @@
 {
-  "updatedAt": "2026-06-11T22:37:31.640Z",
-  "fonte": "nenhuma",
-  "totalJogosComResultado": 0,
-  "gameResults": {},
+  "updatedAt": "2026-06-11T22:45:31.752Z",
+  "fonte": "thesportsdb",
+  "totalJogosComResultado": 1,
+  "gameResults": {
+    "a1": {
+      "homeGoals": 2,
+      "awayGoals": 0,
+      "advancedTeam": "México",
+      "redCards": {
+        "home": [],
+        "away": []
+      },
+      "fonte": "thesportsdb",
+      "updatedAt": "2026-06-11T22:45:31.752Z"
+    }
+  },
   "overallResults": {
     "topScorer": "",
     "finalist1": "",
