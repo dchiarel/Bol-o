@@ -36,12 +36,12 @@ const NOME_MAP = {
     'morocco': 'Marrocos', 'maroc': 'Marrocos',
     'norway': 'Noruega', 'norvege': 'Noruega',
     'sweden': 'Suécia', 'sverige': 'Suécia',
-    'mexico': 'México',
-    'canada': 'Canadá',
+    'mexico': 'México', 'méxico': 'México',
+    'canada': 'Canadá', 'canadá': 'Canadá',
     'usa': 'Estados Unidos', 'united states': 'Estados Unidos', 'us': 'Estados Unidos',
     'south korea': 'Coreia do Sul', 'korea republic': 'Coreia do Sul',
     'czechia': 'Tchéquia', 'czech republic': 'Tchéquia',
-    'south africa': 'África do Sul',
+    'south africa': 'África do Sul', 'áfrica do sul': 'África do Sul',
     'switzerland': 'Suíça', 'suisse': 'Suíça',
     'austria': 'Áustria',
     'algeria': 'Argélia', 'algerie': 'Argélia',
@@ -186,60 +186,66 @@ async function buscarOpenFootball() {
     const data = await res.json();
 
     const gameResults = {};
-    const rounds = data.rounds || data.matches || [];
 
-    rounds.forEach(round => {
-        const matches = round.matches || (Array.isArray(round) ? round : []);
-        matches.forEach(match => {
-            const homeRaw = match.team1 || match.home?.name || match.home;
-            const awayRaw = match.team2 || match.away?.name || match.away;
-            const score = match.score || match.ft;
+    // Suporta tanto array flat (matches) quanto rounds[].matches
+    let allMatches = [];
+    if (Array.isArray(data.matches)) {
+        const primeiro = data.matches[0];
+        if (primeiro && Array.isArray(primeiro.matches)) {
+            // rounds[].matches
+            data.matches.forEach(r => allMatches.push(...(r.matches || [])));
+        } else {
+            // array flat
+            allMatches = data.matches;
+        }
+    } else if (Array.isArray(data.rounds)) {
+        data.rounds.forEach(r => allMatches.push(...(r.matches || [])));
+    }
 
-            if (!homeRaw || !awayRaw) return;
+    allMatches.forEach(match => {
+        const homeRaw = match.team1 || match.home?.name || match.home;
+        const awayRaw = match.team2 || match.away?.name || match.away;
+        if (!homeRaw || !awayRaw) return;
 
-            const gameId = encontrarGameId(homeRaw, awayRaw);
-            if (!gameId) return;
+        const gameId = encontrarGameId(homeRaw, awayRaw);
+        if (!gameId) return;
 
-            // Placar pode vir como "2:1" ou { ft: [2, 1] } ou { home: 2, away: 1 }
-            let homeGoals = null, awayGoals = null;
-            if (score) {
-                if (typeof score === 'string') {
-                    const parts = score.split(':').map(Number);
-                    homeGoals = parts[0]; awayGoals = parts[1];
-                } else if (Array.isArray(score.ft)) {
-                    homeGoals = score.ft[0]; awayGoals = score.ft[1];
-                } else if (score.ft && typeof score.ft === 'string') {
-                    const parts = score.ft.split('-').map(Number);
-                    homeGoals = parts[0]; awayGoals = parts[1];
-                } else if (typeof score.home === 'number') {
-                    homeGoals = score.home; awayGoals = score.away;
-                }
+        const score = match.score || match.ft;
+        let homeGoals = null, awayGoals = null;
+        if (score) {
+            if (typeof score === 'string') {
+                const parts = score.split(/[:\-]/).map(Number);
+                homeGoals = parts[0]; awayGoals = parts[1];
+            } else if (Array.isArray(score.ft)) {
+                homeGoals = score.ft[0]; awayGoals = score.ft[1];
+            } else if (score.ft && typeof score.ft === 'string') {
+                const parts = score.ft.split(/[:\-]/).map(Number);
+                homeGoals = parts[0]; awayGoals = parts[1];
+            } else if (typeof score.home === 'number') {
+                homeGoals = score.home; awayGoals = score.away;
             }
+        }
+        if (homeGoals === null || isNaN(homeGoals)) return;
 
-            if (homeGoals === null || isNaN(homeGoals)) return;
+        let advancedTeam = '';
+        if (homeGoals > awayGoals) advancedTeam = normalizarTime(homeRaw);
+        else if (awayGoals > homeGoals) advancedTeam = normalizarTime(awayRaw);
 
-            // Determinar quem avançou (apenas para knockouts — nos grupos não tem)
-            let advancedTeam = '';
-            if (homeGoals > awayGoals) advancedTeam = normalizarTime(homeRaw);
-            else if (awayGoals > homeGoals) advancedTeam = normalizarTime(awayRaw);
-
-            // Cartões vermelhos (se disponível)
-            const redCards = { home: [], away: [] };
-            (match.goals || []).forEach(g => {
-                if (g.type === 'red card' || g.type === 'cartao_vermelho') {
-                    const jogador = `${g.name || g.player} (${g.minute || '?'}min)`;
-                    if (g.team === 1 || g.side === 'home') redCards.home.push(jogador);
-                    else redCards.away.push(jogador);
-                }
-            });
-
-            gameResults[gameId] = {
-                homeGoals, awayGoals, advancedTeam,
-                redCards,
-                fonte: 'openfootball',
-                updatedAt: new Date().toISOString()
-            };
+        const redCards = { home: [], away: [] };
+        (match.goals || []).forEach(g => {
+            if (g.type === 'red card' || g.type === 'cartao_vermelho') {
+                const jogador = `${g.name || g.player} (${g.minute || '?'}min)`;
+                if (g.team === 1 || g.side === 'home') redCards.home.push(jogador);
+                else redCards.away.push(jogador);
+            }
         });
+
+        gameResults[gameId] = {
+            homeGoals, awayGoals, advancedTeam,
+            redCards,
+            fonte: 'openfootball',
+            updatedAt: new Date().toISOString()
+        };
     });
 
     console.log(`✅ OpenFootball: ${Object.keys(gameResults).length} resultados encontrados`);
@@ -250,13 +256,21 @@ async function buscarOpenFootball() {
 // FONTE 2: worldcup26.ir (gratuito, sem custo)
 // ============================================================
 async function buscarWorldcup26ir() {
-    console.log('🔄 Buscando worldcup26.ir (gratuito)...');
+    console.log('🔄 Buscando worldcup26.ir...');
+    const token = process.env.WORLDCUP26_TOKEN;
+    if (!token) {
+        console.log('⚠️ worldcup26.ir: WORLDCUP26_TOKEN não configurado, pulando.');
+        return {};
+    }
     const res = await fetch('https://worldcup26.ir/get/games', {
-        headers: { 'User-Agent': 'bolao-copa-2026-bot' }
+        headers: {
+            'User-Agent': 'bolao-copa-2026-bot',
+            'Authorization': `Bearer ${token}`
+        }
     });
     if (!res.ok) throw new Error(`worldcup26.ir HTTP ${res.status}`);
     const data = await res.json();
-    const matches = data.games || data.matches || data || [];
+    const matches = data.games || data.matches || (Array.isArray(data) ? data : []);
     const gameResults = {};
 
     matches.forEach(match => {
@@ -291,23 +305,43 @@ async function buscarWorldcup26ir() {
 // ============================================================
 async function buscarTheSportsDB() {
     console.log('🔄 Buscando TheSportsDB (gratuito)...');
-    // Liga FIFA World Cup 2026 = id 4429
-    const url = 'https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026';
-    const res = await fetch(url, {
-        headers: { 'User-Agent': 'bolao-copa-2026-bot' }
-    });
-    if (!res.ok) throw new Error(`TheSportsDB HTTP ${res.status}`);
-    const data = await res.json();
-    const events = data.events || [];
     const gameResults = {};
 
-    events.forEach(ev => {
-        if (!ev.intHomeScore && ev.intHomeScore !== 0) return; // jogo não realizado
+    // Busca jogos já realizados (últimos resultados da liga 4429)
+    const urls = [
+        'https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026',
+        'https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=4429',
+    ];
+
+    let allEvents = [];
+    for (const url of urls) {
+        try {
+            const res = await fetch(url, { headers: { 'User-Agent': 'bolao-copa-2026-bot' } });
+            if (!res.ok) continue;
+            const data = await res.json();
+            const events = data.events || data.results || [];
+            allEvents.push(...events);
+        } catch(e) {
+            // continua para próxima URL
+        }
+    }
+
+    // Deduplica por idEvent
+    const seen = new Set();
+    allEvents = allEvents.filter(ev => {
+        if (seen.has(ev.idEvent)) return false;
+        seen.add(ev.idEvent);
+        return true;
+    });
+
+    allEvents.forEach(ev => {
+        if (ev.intHomeScore === null || ev.intHomeScore === undefined || ev.intHomeScore === '') return;
         const gameId = encontrarGameId(ev.strHomeTeam, ev.strAwayTeam);
         if (!gameId) return;
 
         const homeGoals = parseInt(ev.intHomeScore);
         const awayGoals = parseInt(ev.intAwayScore);
+        if (isNaN(homeGoals) || isNaN(awayGoals)) return;
 
         gameResults[gameId] = {
             homeGoals, awayGoals,
