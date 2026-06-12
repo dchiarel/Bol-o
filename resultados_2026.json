@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-12T11:46:44.469Z",
+  "updatedAt": "2026-06-12T15:25:11.307Z",
   "fonte": "openfootball",
   "totalJogosComResultado": 2,
   "gameResults": {
@@ -12,7 +12,7 @@
         "away": []
       },
       "fonte": "openfootball",
-      "updatedAt": "2026-06-12T11:46:44.469Z"
+      "updatedAt": "2026-06-12T15:25:11.307Z"
     },
     "a2": {
       "homeGoals": 2,
@@ -23,7 +23,7 @@
         "away": []
       },
       "fonte": "openfootball",
-      "updatedAt": "2026-06-12T11:46:44.469Z"
+      "updatedAt": "2026-06-12T15:25:11.307Z"
     }
   },
   "overallResults": {
