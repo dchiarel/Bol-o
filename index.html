@@ -728,15 +728,22 @@ a{color:inherit}
             <button onclick="doAddParticipant()" style="width:100%;padding:12px;background:#2a9d8f;color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95em;">+ Adicionar</button>
         </div>
 
-        <h4 style="color:white;margin-bottom:12px;font-size:0.95em;">Participantes cadastrados</h4>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;">
+            <h4 style="color:white;font-size:0.95em;margin:0;">Participantes cadastrados</h4>
+            <button onclick="limparFantasmas()" title="Puxa a lista oficial da nuvem e remove cadastros fantasmas"
+                style="background:rgba(255,255,255,.06);color:#FFD700;border:1px solid rgba(255,215,0,.35);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82em;font-weight:600;white-space:nowrap;">
+                🧹 Limpar fantasmas
+            </button>
+        </div>
+        <p style="color:#9aa4ba;font-size:0.78em;margin:-4px 0 12px;">Use “Remover” para apagar um cadastro de vez (não volta em nenhum aparelho). “Limpar fantasmas” sincroniza esta lista com a nuvem.</p>
         <div id="adminParticipantsList"></div>
 
         <button onclick="closeAdminModal()" style="width:100%;padding:12px;background:transparent;color:#9aa4ba;border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:0.9em;cursor:pointer;margin-top:16px;">Fechar</button>
     </div>
 </div>
 
-<script src="data.js?v=13"></script>
-<script src="jogadores.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="data.js?v=15"></script>
+<script src="jogadores.js?v=15"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
