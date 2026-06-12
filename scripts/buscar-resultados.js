@@ -380,21 +380,32 @@ async function main() {
     }
 
     let novosResultados = {};
-    let fonte = 'nenhuma';
+    const fontesUsadas = [];
 
-    // Tentar cada fonte em ordem
-    const fontes = [buscarOpenFootball, buscarWorldcup26ir, buscarTheSportsDB];
-    for (const buscarFn of fontes) {
+    // Combinar TODAS as fontes. Prioridade pela ordem: a primeira fonte que
+    // tiver um jogo é a "dona" dele; as seguintes só preenchem o que faltar.
+    const fontes = [
+        { nome: 'openfootball',  fn: buscarOpenFootball },
+        { nome: 'worldcup26.ir', fn: buscarWorldcup26ir },
+        { nome: 'thesportsdb',   fn: buscarTheSportsDB },
+    ];
+    for (const { nome, fn } of fontes) {
         try {
-            novosResultados = await buscarFn();
-            if (Object.keys(novosResultados).length > 0) {
-                fonte = novosResultados[Object.keys(novosResultados)[0]]?.fonte || 'desconhecida';
-                break;
+            const resultados = await fn();
+            let adicionados = 0;
+            for (const [gameId, result] of Object.entries(resultados)) {
+                if (!novosResultados[gameId]) {
+                    novosResultados[gameId] = result;
+                    adicionados++;
+                }
             }
+            if (adicionados > 0) fontesUsadas.push(`${nome} (${adicionados})`);
         } catch(e) {
-            console.log(`⚠️ Falha: ${e.message}`);
+            console.log(`⚠️ Falha em ${nome}: ${e.message}`);
         }
     }
+
+    const fonte = fontesUsadas.length ? fontesUsadas.join(' + ') : 'nenhuma';
 
     if (Object.keys(novosResultados).length === 0) {
         console.log('ℹ️ Nenhum resultado novo encontrado (Copa ainda não começou ou APIs offline)');
