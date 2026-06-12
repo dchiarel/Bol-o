@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Re-deploy após o robô atualizar os resultados (o push do robô usa o
+  # GITHUB_TOKEN e por isso não dispara o gatilho "push" acima).
+  workflow_run:
+    workflows: ["⚽ Atualizar Resultados Copa 2026"]
+    types: [completed]
 
 permissions:
   contents: read
