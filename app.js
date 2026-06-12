@@ -545,7 +545,7 @@ function isGolden(pid, gameId){
 
 async function carregarResultadosRemotos() {
     try {
-        const res = await fetch('/resultados_2026.json?t=' + Date.now());
+        const res = await fetch('resultados_2026.json?t=' + Date.now());
         if (!res.ok) return;
         const dados = await res.json();
 
