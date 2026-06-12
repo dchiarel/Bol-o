@@ -88,17 +88,31 @@ async function fetchRemoteState() {
         const remote = await res.json();
         if (!remote) return;
 
+        // Tombstones: cadastros removidos pelo admin. Nenhum aparelho deve ressuscitá-los.
+        knownDeleted = remote.deleted || {};
+        const isDeleted = id => Object.prototype.hasOwnProperty.call(knownDeleted, String(id));
+
         // participants: a NUVEM é a fonte da verdade. Isso remove "fantasmas"
         // (cadastros antigos que só existiam no localStorage e nunca foram pra nuvem).
         const remoteParts = remote.participants ? Object.values(remote.participants) : [];
         if (remoteParts.length) {
             const byId = {};
-            remoteParts.forEach(p => byId[p.id] = p);
-            // Nunca perde o próprio cadastro (caso ainda não tenha subido pra nuvem)
+            remoteParts.forEach(p => { if (!isDeleted(p.id)) byId[p.id] = p; });
+            // Nunca perde o próprio cadastro (caso ainda não tenha subido pra nuvem),
+            // a menos que o admin tenha removido este cadastro.
             const sessionId = parseInt(localStorage.getItem('bolao_session_pid'));
             const mineLocal = state.participants.find(p => p.id === sessionId);
-            if (mineLocal) byId[mineLocal.id] = mineLocal;
+            if (mineLocal && !isDeleted(mineLocal.id)) byId[mineLocal.id] = mineLocal;
             state.participants = Object.values(byId);
+        } else if (Object.keys(knownDeleted).length) {
+            // Nuvem sem participantes, mas com tombstones: remove os fantasmas locais.
+            state.participants = state.participants.filter(p => !isDeleted(p.id));
+        }
+
+        // Se o usuário logado foi removido pelo admin, encerra a sessão neste aparelho.
+        if (currentParticipantId && isDeleted(currentParticipantId)) {
+            currentParticipantId = null;
+            localStorage.removeItem('bolao_session_pid');
         }
 
         // Palpites: a nuvem é a fonte para os OUTROS participantes;
@@ -120,6 +134,7 @@ async function fetchRemoteState() {
 
 async function pushParticipant(p) {
     if (!syncOn()) return;
+    if (knownDeleted[String(p.id)]) return; // não ressuscita cadastro removido pelo admin
     try {
         await fetch(`${SYNC_URL}/bolao/participants/${p.id}.json`, {
             method: 'PUT',
@@ -130,6 +145,10 @@ async function pushParticipant(p) {
 
 async function deleteParticipantRemote(id) {
     if (!syncOn()) return;
+    // "Tombstone": marca o cadastro como removido para sempre. Sem isso, um aparelho
+    // antigo (com o cadastro ainda no localStorage) reenviaria o fantasma pra nuvem.
+    try { await fetch(`${SYNC_URL}/bolao/deleted/${id}.json`, { method: 'PUT', body: JSON.stringify(Date.now()) }); } catch (e) {}
+    knownDeleted[String(id)] = Date.now();
     const paths = [`participants/${id}`, `gamesPredictions/${id}`, `overallPredictions/${id}`, `goldenTipps/${id}`];
     for (const path of paths) {
         try { await fetch(`${SYNC_URL}/bolao/${path}.json`, { method: 'DELETE' }); } catch (e) {}
@@ -146,6 +165,7 @@ function schedulePush() {
 async function pushMyData() {
     if (!syncOn() || !currentParticipantId) return;
     const pid = currentParticipantId;
+    if (knownDeleted[String(pid)]) return; // cadastro removido pelo admin: não reenvia
     const me  = getCurrentParticipant();
     const payloads = {
         // Regrava SEMPRE o próprio cadastro junto (evita "fantasmas" sem nome na nuvem)
@@ -165,10 +185,12 @@ async function pushMyData() {
 async function selfHealParticipant() {
     if (!syncOn()) return;
     const me = getCurrentParticipant();
-    if (me) await pushParticipant(me);
+    if (me && !knownDeleted[String(me.id)]) await pushParticipant(me);
 }
 
 let currentParticipantId = null;
+// Cadastros removidos pelo admin (tombstones vindos da nuvem). Bloqueia o reenvio.
+let knownDeleted = {};
 
 function restoreSession() {
     const saved = localStorage.getItem('bolao_session_pid');
@@ -336,6 +358,23 @@ function doRemoveParticipant(id) {
     deleteParticipantRemote(id);
     renderAdminList();
     renderParticipants();
+}
+
+// Ação MANUAL do admin: puxa a lista oficial da nuvem e remove fantasmas locais.
+// Cadastros já marcados como removidos (tombstones) não voltam.
+async function limparFantasmas() {
+    if (!syncOn()) { alert('Sincronização com a nuvem está desativada.'); return; }
+    if (!confirm('Buscar a lista oficial na nuvem e remover cadastros fantasmas?')) return;
+    const antes = state.participants.length;
+    showToast('Sincronizando com a nuvem…');
+    await fetchRemoteState();
+    saveState();
+    renderAdminList();
+    renderParticipants();
+    const removidos = antes - state.participants.length;
+    showToast(removidos > 0
+        ? `Lista sincronizada. ${removidos} fantasma(s) removido(s). ✅`
+        : 'Lista sincronizada com a nuvem. ✅');
 }
 
 function renderAdminList() {
