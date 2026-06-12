@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-06-11T22:45:31.752Z",
+  "updatedAt": "2026-06-12T04:23:49.996Z",
   "fonte": "thesportsdb",
-  "totalJogosComResultado": 1,
+  "totalJogosComResultado": 2,
   "gameResults": {
     "a1": {
       "homeGoals": 2,
@@ -12,7 +12,18 @@
         "away": []
       },
       "fonte": "thesportsdb",
-      "updatedAt": "2026-06-11T22:45:31.752Z"
+      "updatedAt": "2026-06-12T04:23:49.996Z"
+    },
+    "a2": {
+      "homeGoals": 2,
+      "awayGoals": 1,
+      "advancedTeam": "Coreia do Sul",
+      "redCards": {
+        "home": [],
+        "away": []
+      },
+      "fonte": "thesportsdb",
+      "updatedAt": "2026-06-12T04:23:49.996Z"
     }
   },
   "overallResults": {
