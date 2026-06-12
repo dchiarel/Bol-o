@@ -38,8 +38,4 @@ jobs:
           git diff --cached --quiet || git commit -m "⚽ Resultados $(date -u '+%d/%m/%Y %H:%M') UTC"
           git push || true
 
-      - name: 🚀 Rebuild no Netlify
-        if: env.NETLIFY_BUILD_HOOK != ''
-        env:
-          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
-        run: curl -s -X POST "$NETLIFY_BUILD_HOOK" && echo "✅ Netlify notificado"
+      # GitHub Pages re-deploys automaticamente a cada push no main
